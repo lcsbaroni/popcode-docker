@@ -1,0 +1,46 @@
+version: '3'
+services:
+    app:
+        # image: registry.digitalocean.com/lcsbaroni/popcode:0.6
+        image: lcsbaroni/popcode:1.0
+        build: .
+        ports:
+            - "80"
+            - "443"
+        volumes:
+            - ./site:/app
+        environment:
+            - OPCACHE_VALIDATE_TIMESTAMPS=true
+            - XDEBUG_ENABLE=false
+            - COMPOSER_MEMORY_LIMIT=-1
+            - DB_HOST=db
+            - DB_USERNAME=root
+            - DB_PASSWORD=root
+            - NEWRELIC_LICENSE_KEY=1060a723c6df2af990cb7849c00d92dbFFFFNRAL
+            - NEW_RELIC_APP_NAME=popcode
+
+    web:
+        image: lcsbaroni/nginx-laravel-sidecar
+        volumes:
+            - ./docker/nginx/vhost.conf:/etc/nginx/conf.d/default.conf
+        working_dir: /app
+        links:
+            - app
+        ports:
+            - "80:80"
+            - "443:443"
+
+    db:
+        image: mysql:5.7
+        command: --default-authentication-plugin=mysql_native_password
+        volumes:
+            - popcode_db:/var/lib/mysql
+        environment:
+            - MYSQL_DATABASE=popcode
+            - MYSQL_PASSWORD=root
+            - MYSQL_ROOT_PASSWORD=root
+        ports:
+            - "3309:3306"
+
+volumes:
+    popcode_db:
