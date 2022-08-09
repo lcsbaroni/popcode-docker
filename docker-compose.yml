@@ -16,7 +16,7 @@ services:
             - DB_HOST=db
             - DB_USERNAME=root
             - DB_PASSWORD=root
-            - NEWRELIC_LICENSE_KEY=1060a723c6df2af990cb7849c00d92dbFFFFNRAL
+            - NEWRELIC_LICENSE_KEY=
             - NEW_RELIC_APP_NAME=popcode
 
     web:
