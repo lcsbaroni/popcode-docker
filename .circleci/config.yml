@@ -1,0 +1,64 @@
+version: 2.1
+orbs:
+  aws-ecr: circleci/aws-ecr@8.1.2
+  aws-ecs: circleci/aws-ecs@3.1.0
+
+jobs:
+ build_and_push_image:
+   working_directory: ~/app
+   machine: true
+   steps:
+     - aws-ecr/build-and-push-image:
+          repo: lcsbaroni
+          tag: 'latest,${CIRCLE_TAG:=$CIRCLE_BRANCH}'
+          # aws-access-key-id: $AWS_ACCESS_KEY_ID
+          # aws-cli-version: latest
+          # aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
+          # context: myContext
+          # create-repo: true
+          # executor: aws-ecr/default
+          # extra-build-args: '--compress'
+          # new-profile-name: newProfileName
+          # no-output-timeout: 20m
+          # path: pathToMyDockerfile
+          # platform: linux/amd64
+          # profile-name: myProfileName
+          # push-image: true
+          # region: $AWS_DEFAULT_REGION
+          # registry-id: $AWS_ECR_REGISTRY_ID
+          # repo-scan-on-push: no
+          # role-arn: 'arn:aws:iam::123456789012:role/testing'
+          # skip-when-tags-exist: false
+          # source-profile: sourceProfileName
+          # tag: 'latest,0.1.0'
+
+workflows:
+  version: 2
+  build_and_deploy_aws:
+    jobs:
+      - build_and_push_image:
+          filters:
+            branches:
+              only:
+                - main
+                - config-ci
+            tags:
+              only: /.*/
+      - aws-ecs/deploy-service-update:
+          # family: "${AWS_RESOURCE_NAME_PREFIX}-service"
+          family: "${AWS_RESOURCE_NAME_PREFIX}-task-definition"
+          service-name: "${AWS_RESOURCE_NAME_PREFIX}-service"
+          cluster: "default"
+          # cluster: "${AWS_RESOURCE_NAME_PREFIX}-cluster"
+          # container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX}-service,tag=${CIRCLE_TAG}"
+          container-image-name-updates: "container=${AWS_RESOURCE_NAME_PREFIX},tag=latest"
+          verify-revision-is-deployed: true
+          filters:
+            branches:
+              # ignore: /.*/
+              only:
+                - config-ci
+            tags:
+              only: /.*/
+          requires:
+            - build_and_push_image

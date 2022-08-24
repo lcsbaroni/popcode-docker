@@ -18,7 +18,7 @@ ARG DB_PASSWORD
 ARG DB_PORT
 ARG MAIL_PASSWORD
 ARG NEWRELIC_LICENSE_KEY
-ARG CIRCLE_TAG=master
+ARG CIRCLE_TAG=main
 
 RUN echo "Version: ${CIRCLE_TAG} \nBuild date: $(date '+%Y-%m-%d %H:%M:%S')" >> /app/public/rev.txt
 

@@ -50,3 +50,31 @@ Push
 docker login
 docker push lcsbaroni/popcode:1.0
 ```
+
+
+CI / CD
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/lcsbaroni/popcode-docker/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/lcsbaroni/popcode-docker/tree/main)
+
+Connect your repository on CircliCi
+Config project
+Environment variables
+
+CI - O que é?
+    Filters
+    Build
+    Test
+    Lint
+    Security
+
+CD - O que é?
+    Filter
+    Deploy
+    Verify
+    Tests
+    Rollback
+
+Links
+https://app.circleci.com/settings/project/github/lcsbaroni/popcode-docker?return-to=https%3A%2F%2Fapp.circleci.com%2Fpipelines%2Fgithub%2Flcsbaroni%2Fpopcode-docker
+https://circleci.com/developer/orbs/orb/circleci/aws-ecr
+https://circleci.com/developer/orbs/orb/circleci/aws-ecs
+https://circleci.com/docs/parallelism-faster-jobs
