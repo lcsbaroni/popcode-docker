@@ -1,0 +1,70 @@
+version: 2.1
+orbs:
+  kubernetes: circleci/kubernetes@0.12.0
+  php: circleci/php@1.1.0
+
+jobs:
+ build:
+   working_directory: ~/app
+   machine: true
+   steps:
+     - checkout
+
+     - run:
+        name: Install Docker Compose
+        command: |
+          curl -L https://github.com/docker/compose/releases/download/1.25.3/docker-compose-`uname -s`-`uname -m` > ~/docker-compose
+          chmod +x ~/docker-compose
+          sudo mv ~/docker-compose /usr/local/bin/docker-compose
+
+     - run: docker-compose -f docker-compose-build.yml build
+
+     - run: wget https://github.com/digitalocean/doctl/releases/download/v1.60.0/doctl-1.60.0-linux-amd64.tar.gz
+     - run: |
+        tar xf doctl-1.60.0-linux-amd64.tar.gz
+        sudo mv doctl /usr/local/bin
+
+     # deploy the image
+     - run: |
+        doctl registry login -t $DIGITALOCEAN_ACCESS_TOKEN
+        export IMAGE_VERSION=${CIRCLE_TAG:=$CIRCLE_BRANCH}
+        docker push registry.digitalocean.com/lcsbaroni/popcode-docker:$IMAGE_VERSION
+ update:
+   docker:
+    - image: 'cimg/base:stable'
+   steps:
+    # - checkout
+    - run: wget https://github.com/digitalocean/doctl/releases/download/v1.60.0/doctl-1.60.0-linux-amd64.tar.gz
+    - run: |
+       tar xf doctl-1.60.0-linux-amd64.tar.gz
+       sudo mv doctl /usr/local/bin
+       source ~/.bashrc
+    - run: doctl kubernetes cluster kubeconfig save lcsbaroni-cluster -t $DIGITALOCEAN_ACCESS_TOKEN
+    - kubernetes/install-kubectl
+    - kubernetes/update-container-image:
+        container-image-updates: 'popcode-docker=registry.digitalocean.com/lcsbaroni/popcode-docker:$CIRCLE_TAG'
+        get-rollout-status: true
+        record: true
+        resource-name: deployment.apps/popcode-docker
+        show-kubectl-command: true
+        dry-run: false
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - master
+            tags:
+              only: /.*/
+      - update:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /.*/
+          requires:
+            - build
